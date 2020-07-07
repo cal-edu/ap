@@ -23,14 +23,17 @@
 <body>
 
 <div class = 'bigframe'> 
+ 
+ <div id="chartContainer" style="height: 60%; width: 50%;" > </div>
+ 
  </div>
- <div id="chartContainer" > </div>
+ 
  <script type="text/javascript">
         var chart = new CanvasJS.Chart("chartContainer", {
+  backgroundColor: "transparent",
   animationEnabled: true,
-  theme: "light2",
   title: {
-    text: "Try dragging Data Points to reposition them"
+    text: "Piecewise Linear Function"
   },
   subtitles: [{
     text: "Click anywhere on plotarea to add new Data Points"
