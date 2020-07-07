@@ -24,117 +24,83 @@
 
 <div class = 'bigframe'> 
  
- 
+ <!-- style="height: 700px; width: 400px; background-image:url('assets/pics/ppt.png');-- >
  </div>
- <div id="chartContainer" style="height: 300px; width: 300px;"></div>
+ <div id="chartContainer" class = "bigframe" ></div>
  <script type="text/javascript">
         var chart = new CanvasJS.Chart("chartContainer",
-        {        
-            axisX:{
-                minimum: -2,
-                maximum: 5
-            },
-            axisY:{
-                minimum: -2,
-                maximum: 5
-            },
-            title: {
-                text: "Try dragging column to reposition dataPoint",
-            },
-            data: [
-            {
-                type: "line",
-                dataPoints: [
-                { x: 0, y: 0 },
-                { x: 1, y: 1 }
-                ]
-            },
-             {
-                type: "line",
-                dataPoints: [
-                { x: 0, y: 0 },
-                { x: 1, y: 2 }
-                ]
-            }
-            ]
-        });
+	{
+  		title:{
+      	text:"Reposition the dataPoint by select and drag"
+      },
+  	  zoomEnabled: true,
+      zoomType:"xy",
+      rangeChanging: getViewport, //We are usig rangeChanging for knowing new y value after dragging
+      data: [
+        {
+          type: "line",
+          mouseover: mouseoverHandler,
+          mouseout: mouseoutHandler,
+          dataPoints: [
+          { x: 10, y: 71 },
+          { x: 20, y: 55},
+          { x: 30, y: 50 },
+          { x: 40, y: 65 },
+          { x: 50, y: 95 },
+          { x: 60, y: 68 },
+          { x: 70, y: 28 },
+          { x: 80, y: 34 },
+          { x: 90, y: 14}
+          ]
+        },
+         {
+            //It's a dummy invisible dataseries only for the purpose of increasing x or y value even upto samll values
+            toolTipContent:null,
+            color:"transparent",
+            dataPoints:[{x:.1, y:.1},{x:.2, y:.2}]
+         }
+      ]
+    });
 
-        chart.render();
+chart.render();
+ 
+document.getElementById("chartContainer").onmousedown = function(){
+      chart.isMouseDown = true;
+ };
+   
+function mouseoutHandler(e){
+	if(!e.chart.isMouseDown)
+  	 e.chart.draggingDataPoint = null;
+}
+   
+ function mouseoverHandler(e){
+    e.chart.draggingDataPoint = e.dataPoint;
+ }
 
-        var xSnapDistance = chart.axisX[0].convertPixelToValue(chart.get("dataPointWidth")) / 2;
-        var ySnapDistance = 3;
 
-        var xValue, yValue;
+ //Function for getting viewport and set corrosponding x and y value
+function getViewport(e){
 
-        var mouseDown = false;
-        var selected = null;
-        var changeCursor = false;
-        
-        var timerId = null;
+    if(e.chart.isMouseDown && e.chart.draggingDataPoint){
+      //For updating the y value
+	 	 e.chart.draggingDataPoint.x = (e.axisX[0].viewportMaximum-e.chart.draggingDataPoint.x) >
+                                       (e.chart.draggingDataPoint.x - e.axisX[0].viewportMinimum) ?
+                                        e.axisX[0].viewportMaximum :  e.axisX[0].viewportMinimum;
+         e.chart.draggingDataPoint.y = (e.axisY[0].viewportMaximum-e.chart.draggingDataPoint.y) >
+                                       (e.chart.draggingDataPoint.y - e.axisY[0].viewportMinimum) ?
+                                        e.axisY[0].viewportMaximum :  e.axisY[0].viewportMinimum;
+     }
 
-        function getPosition(e) {
-            var parentOffset = $("#chartContainer > .canvasjs-chart-container").offset();          	
-            var relX = e.pageX - parentOffset.left;
-            var relY = e.pageY - parentOffset.top;
-            xValue = Math.round(chart.axisX[0].convertPixelToValue(relX));
-            yValue = Math.round(chart.axisY[0].convertPixelToValue(relY));
-        }
-        
-        function searchDataPoint() {
-            var dps = chart.data[0].dataPoints;
-            for(var i = 0; i < dps.length; i++ ) {
-                if( (xValue >= dps[i].x - xSnapDistance && xValue <= dps[i].x + xSnapDistance) && 
-                (yValue >= dps[i].y - ySnapDistance && yValue <= dps[i].y + ySnapDistance) ) {
-                    if(mouseDown) {
-                        selected = i;
-                        break;
-                    }
-                    else {
-                        changeCursor = true;
-                        break; 
-                    }
-                } else {
-                    selected = null;
-                    changeCursor = false;
-                }
-            }
+    if(!e.chart.options.axisY)
+        e.chart.options.axisY = {};
+	if(!e.chart.options.axisX)
+        e.chart.options.axisX = {};
 
-        }
-
-        jQuery("#chartContainer > .canvasjs-chart-container").on({
-            mousedown: function(e) {
-                mouseDown = true;
-                getPosition(e);  
-                searchDataPoint();
-            },
-            mousemove: function(e) {
-                getPosition(e);
-                if(mouseDown) {
-                    clearTimeout(timerId);
-                    timerId = setTimeout(function(){
-                        if(selected != null) {
-                            chart.data[0].dataPoints[selected].y = yValue;
-                            chart.render();
-                        }   
-                    }, 0);
-                }
-                else {
-                    searchDataPoint();
-                    if(changeCursor) {
-                        chart.data[0].set("cursor", "n-resize");
-                    } else {
-                        chart.data[0].set("cursor", "default");
-                    }
-                }
-            },
-            mouseup: function(e) {
-                if(selected != null) {
-                    chart.data[0].dataPoints[selected].y = yValue;
-                    chart.render();
-                    mouseDown = false;
-                }
-            }
-        });
+    e.chart.options.axisY.viewportMinimum = e.chart.options.axisY.viewportMaximum = null;
+	e.chart.options.axisX.viewportMinimum = e.chart.options.axisX.viewportMaximum = null;
+    e.chart.isMouseDown = false;
+    e.chart.draggingDataPoint = null;
+}
     </script>
  
  
